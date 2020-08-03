@@ -1511,8 +1511,6 @@ class DAG(BaseDag, LoggingMixin):
         )
         session.add(run)
 
-        session.commit()
-
         run.dag = self
 
         # create the associated task instances
