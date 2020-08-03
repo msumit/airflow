@@ -21,6 +21,7 @@ from typing import Any, List, Optional, Tuple, Union
 from sqlalchemy import (
     Boolean, Column, DateTime, Index, Integer, PickleType, String, UniqueConstraint, and_, func, or_,
 )
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import synonym
 from sqlalchemy.orm.session import Session
@@ -470,12 +471,18 @@ class DagRun(Base, LoggingMixin):
                 continue
 
             if task.task_id not in task_ids:
-                Stats.incr(
-                    "task_instance_created-{}".format(task.__class__.__name__),
-                    1, 1)
-                ti = TI(task, self.execution_date)
-                task_instance_mutation_hook(ti)
-                session.add(ti)
+                try:
+                    Stats.incr(
+                        "task_instance_created-{}".format(task.__class__.__name__),
+                        1, 1)
+                    ti = TI(task, self.execution_date)
+                    task_instance_mutation_hook(ti)
+                    session.add(ti)
+                except IntegrityError as err:
+                    self.log.info(str(err))
+                    self.log.info(f'Task {dag.dag_id}.{task.task_id} for {self.execution_date} already '
+                                  f'present in DB. Ignoring the above IntegrityError and moving on.')
+
 
         session.commit()
 
