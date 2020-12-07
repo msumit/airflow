@@ -85,7 +85,7 @@ class BaseXCom(Base, LoggingMixin):
         """
         session.expunge_all()
 
-        value = XCom.serialize_value(key, value, execution_date, task_id, dag_id)
+        value = XCom.serialize_value(value)
 
         # remove any duplicate XComs
         session.query(cls).filter(
@@ -229,7 +229,7 @@ class BaseXCom(Base, LoggingMixin):
         session.commit()
 
     @staticmethod
-    def serialize_value(key: str, value: Any, execution_date: pendulum.DateTime, task_id: str, dag_id: str):
+    def serialize_value(value: Any):
         """Serialize Xcom value to str or pickled object"""
         if conf.getboolean('core', 'enable_xcom_pickling'):
             return pickle.dumps(value)
@@ -270,7 +270,7 @@ class BaseXCom(Base, LoggingMixin):
         creating XCom orm model. This is used when viewing XCom listing
         in the webserver, for example.
         """
-        return XCom.deserialize_value(self)
+        return BaseXCom.deserialize_value(self)
 
 
 def resolve_xcom_backend():
