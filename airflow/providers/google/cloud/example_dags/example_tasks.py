@@ -52,6 +52,13 @@ timestamp = timestamp_pb2.Timestamp()
 timestamp.FromDatetime(datetime.now() + timedelta(hours=12))
 
 LOCATION = "europe-west1"
+# Validate GCP_TASKS_QUEUE_ID environment variable
+if 'GCP_TASKS_QUEUE_ID' not in os.environ:
+    import logging
+    logging.warning(
+        "GCP_TASKS_QUEUE_ID environment variable is not set. "
+        "Using a default value is not recommended for production environments."
+    )
 QUEUE_ID = os.environ.get('GCP_TASKS_QUEUE_ID', "cloud-tasks-queue")
 TASK_NAME = "task-to-run"
 
